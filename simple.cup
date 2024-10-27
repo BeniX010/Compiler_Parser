@@ -67,8 +67,16 @@ non terminal DeclNode	      decl;
 non terminal FieldDeclNode    fieldDecl;
 non terminal TypeNode	      type;
 non terminal IdNode	      id;
+non terminal Integer			expr;
  
 start with program;
+
+/*Precedences*/
+precedence left AND, OR;
+precedence nonassoc ASSIGN, EQUALS, NOTEQUALS, LESS, GREATER, LESSEQ, GREATEREQ;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence left NOT;
 
 /*
  * grammar with actions
@@ -113,3 +121,5 @@ id              ::= ID:i
 		{: RESULT = new IdNode(i.linenum, i.charnum, i.idVal);
 		:}
 		;
+
+expr			::=
