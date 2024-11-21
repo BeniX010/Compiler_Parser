@@ -1,3 +1,58 @@
-// Here you write your extensive test program that must
-// excercise all grammatical concepts defined in simple.grammar
+public class MyClass {
+  static int x;
+  static int y;
+  public static void myFunction1(int x, int y){
+    int var1;
+    int var2;
+    boolean var3;
+    var1 = 2 + 3 + 4 + 5;
+    var2 = 2 - 3 - 4 - 5; 
+    var1 = 2 * 3 * 4 * 5;
+    var1 = 2 / 3 / 4 / 5;
+    var1 = 2 ** 3 ** 4 ** 5;
+    var1 = !var2;
+    var3 = true && false && true && false;
+    var3 = true || false || true || false;
+    var3 = 2 == 3;
+    var3 = 2 != 3;
+    var3 = 2 < 3;
+    var3 = 2 > 3;
+    var3 = 2 >= 3;
+    var3 = 2 <= 3;
+    var1 = -5;
+    var1 = (2 + 3);
+    var1 = 2 + 3 * 5 - 4 / 6 ** 2;
+    System.out.println(2);
+    var1 = 1 + myFunction1();
 
+    x = 4;
+    if(x == 2){
+      return "Hallo";
+    }
+    if(y == 2){
+      return;
+    }
+    else{
+      return "";
+    }
+    do{	
+      myFunction2(2,2 - 3);
+      myFunction3();
+      x = x + 1;
+    }while(x < 10)
+    {
+      int var3;
+      boolean var4;
+      switch("hello"){
+        case "hi":
+          int temp;
+          temp = 2;
+        case "hello":
+	        int temp;
+          temp = 4;
+        default:
+	        System.out.println("ERROR!");
+      }
+    }
+  }
+}	

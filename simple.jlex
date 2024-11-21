@@ -29,19 +29,25 @@ class IntLitTokenVal extends TokenVal {
     }
 }
 
-// THIS IS NECESSARY FOR THE PARSER TO COMPILE
-
-
-// Provided class to represent identifiers
-class IdTokenVal extends TokenVal {
-    String idVal;
-    IdTokenVal(int l, int c, String str) {
-        super(l,c);
-        idVal = str;
-    }
+class StringLitTokenVal extends TokenVal{
+	//new field: the value of the String literal
+	String stringVal;
+	//constructor
+	StringLitTokenVal(int l, int c, String val){
+		super(l,c);
+		stringVal = val;
+	}
 }
-// 
 
+class IdTokenVal extends TokenVal{
+	//new field: the value of the String literal
+	String idVal;
+	//constructor
+	IdTokenVal(int l, int c, String val){
+		super(l,c);
+		idVal = val;
+	}
+}
 
 
 // The following class is used to keep track of the character number at which
@@ -52,7 +58,14 @@ class CharNum {
 %%
 
 DIGIT=		[0-9]
-WHITESPACE=	[\ \t\n]
+INTLITERAL = [\+\-]?([1-9][0-9]*|0)
+WHITESPACE=	[\ \t]
+NL = (\r|\n|\r\n)
+IDENTIFIER = [a-zA-Z][a-zA-Z0-9_]*
+RESERVED = String|System.out.println|boolean|class|do|else|false|if|int|public|return|static|true|void|while|case|switch|default
+STRINGLITERAL = \"([^\\\"\n]|\\[ntr\'\"\\])*\"
+SYMBOLS = \{|\}|\(|\)|\+|\*|,|=|;|-|\/|\!|&&|\|\||==|\!=|<|>|<=|>=|:|\*\*
+
 
 // The next 3 lines are included so that we can use the generated scanner
 // with java CUP (the Java parser generator)
@@ -68,26 +81,257 @@ return new Symbol(sym.EOF);
 // Turn on line counting
 %line
 
+%{
+StringBuilder stringBuilder = new StringBuilder();
+%}
+
+%init{
+	yybegin(NORMAL);
+%init}
+
+%state NORMAL COMMENT STRING SINGLE_LINE_COMMENT
+
 %%
 
-{DIGIT}+   {// NOTE: the following computation of the integer value does NOT
+
+<NORMAL>{
+{NL} {CharNum.num = 1;}
+"\""			{
+				CharNum.num++;
+				yybegin(STRING);
+				}
+
+{RESERVED} {
+			String val = yytext();
+			int symInfo = 0;
+			switch(val){
+				case "String":
+					symInfo = sym.STRING;
+					break;
+				case "System.out.println":
+					symInfo = sym.PRINT;
+					break;
+				case "boolean":
+					symInfo = sym.BOOLEAN;
+					break;
+				case "class":
+					symInfo = sym.CLASS;
+					break;
+				case "do":
+					symInfo = sym.DO;
+					break;
+				case "else":
+					symInfo = sym.ELSE;
+					break;
+				case "false":
+					symInfo = sym.FALSE;
+					break;
+				case "if":
+					symInfo = sym.IF;
+					break;
+				case "int":
+					symInfo = sym.INT;
+					break;
+				case "public":
+					symInfo = sym.PUBLIC;
+					break;
+				case "return":
+					symInfo = sym.RETURN;
+					break;
+				case "static":
+					symInfo = sym.STATIC;
+					break;
+				case "true":
+					symInfo = sym.TRUE;
+					break;
+				case "void":
+					symInfo = sym.VOID;
+					break;
+				case "while":
+					symInfo = sym.WHILE;
+					break;
+				case "case":
+					symInfo = sym.CASE;
+					break;
+				case "switch":
+					symInfo = sym.SWITCH;
+					break;
+				case "default":
+					symInfo = sym.DEFAULT;
+					break;							
+			}
+			Symbol S = new Symbol(symInfo, new TokenVal(yyline+1,CharNum.num));
+			CharNum.num += yytext().length();
+			return S;
+		}
+
+{INTLITERAL}   {// NOTE: the following computation of the integer value does NOT
 	    //       check for overflow.  This must be changed.
-	    int val = Integer.parseInt(yytext());
-	    Symbol S = new Symbol(sym.INTLITERAL,
+		//int val = (new Integer(yytext())).intValue();
+		try{
+			int val = Integer.parseInt(yytext());
+			Symbol S = new Symbol(sym.INTLITERAL,
 			          new IntLitTokenVal(yyline+1, CharNum.num, val)
 				 );
-	    CharNum.num += yytext().length();
-	    return S;
+	    	CharNum.num += yytext().length();
+	    	return S;
+		}catch(NumberFormatException e){
+			Errors.fatal(yyline+1, CharNum.num, "integer overflow");
+		}
+	    	
 	   }
+
+{IDENTIFIER} {String val = yytext();
+			Symbol S = new Symbol(sym.ID, new IdTokenVal(yyline+1, CharNum.num, val));
+			CharNum.num += yytext().length();
+			return S;
+			}
 
 {WHITESPACE}+  {CharNum.num += yytext().length();}
-
-"+"	   {Symbol S = new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num));
-	    CharNum.num++;
-	    return S;
-	   }
 	    
+{SYMBOLS} {
+			String val = yytext();
+			int symInfo = 0;
+			switch(val){
+				case "{":
+					symInfo = sym.LCURLY;
+					break;
+				case "}":
+					symInfo = sym.RCURLY;
+					break;
+				case "(":
+					symInfo = sym.LPAREN;
+					break;
+				case ")":
+					symInfo = sym.RPAREN;
+					break;
+				case "+":
+					symInfo = sym.PLUS;
+					break;
+				case "*":
+					symInfo = sym.TIMES;
+					break;
+				case ",":
+					symInfo = sym.COMMA;
+					break;
+				case "=":
+					symInfo = sym.ASSIGN;
+					break;
+				case ";":
+					symInfo = sym.SEMICOLON;
+					break;
+				case "-":
+					symInfo = sym.MINUS;
+					break;
+				case "/":
+					symInfo = sym.DIVIDE;
+					break;
+				case "!":
+					symInfo = sym.NOT;
+					break;
+				case "&&":
+					symInfo = sym.AND;
+					break;
+				case "||":
+					symInfo = sym.OR;
+					break;
+				case "==":
+					symInfo = sym.EQUALS;
+					break;
+				case "!=":
+					symInfo = sym.NOTEQUALS;
+					break;
+				case "<":
+					symInfo = sym.LESS;
+					break;
+				case ">":
+					symInfo = sym.GREATER;
+					break;
+				case "<=":
+					symInfo = sym.LESSEQ;
+					break;	
+				case ">=":
+					symInfo = sym.GREATEREQ;
+					break;
+				case ":":
+					symInfo = sym.COLON;
+					break;
+				case "**":
+					symInfo = sym.POWER;
+					break;														
+			}
+			Symbol S = new Symbol(symInfo, new TokenVal(yyline+1,CharNum.num));
+			CharNum.num += yytext().length();
+			return S;
+		}
+
 .	   {Errors.fatal(yyline+1, CharNum.num,
 			 "ignoring illegal character: " + yytext());
 	    CharNum.num++;
 	   }
+"/\*"			{yybegin(COMMENT);}
+"//"			{yybegin(SINGLE_LINE_COMMENT);}
+
+}
+
+<STRING>	{
+
+	"\""		{
+					String val = "";
+					val = stringBuilder.toString();
+					stringBuilder.setLength(0);
+					Symbol S = new Symbol(sym.STRINGLITERAL, new StringLitTokenVal(yyline+1, CharNum.num, val));
+					CharNum.num += yytext().length();
+					CharNum.num++;
+					yybegin(NORMAL);
+					return S;
+					
+				}
+
+	[^\"]$	{
+					Errors.fatal(yyline+1, CharNum.num,"unterminated String");
+					yybegin(NORMAL);
+				}
+
+	\\[nr\"\\] {
+				String s = yytext();
+				s = s.replace("\\\\","\\");
+				s = s.replace("\\\"","\"");
+				s = s.replace("\\n","\n");
+				s = s.replace("\\r","\r");
+				stringBuilder.append(s);
+				}			
+
+	[^\\\"]			{
+					stringBuilder.append(yytext());
+					CharNum.num++;
+
+				}
+
+	[\\\"]		{
+					Errors.fatal(yyline+1, CharNum.num,"not allowed Character: " + yytext());
+					yybegin(NORMAL);
+				}
+	
+	\\.			{
+					Errors.fatal(yyline+1, CharNum.num,"bad escaped character " + yytext());
+					yybegin(NORMAL);
+				}
+
+	{NL}		{
+					Errors.fatal(yyline+1, CharNum.num,"unterminated String");
+					yybegin(NORMAL);
+				}
+
+}
+
+<COMMENT>	{
+	"\*/"		{yybegin(NORMAL);}
+	{NL}	{ }
+	.			{ }
+	}
+
+<SINGLE_LINE_COMMENT>	{
+	{NL}	{ yybegin(NORMAL);}
+	.			{ }
+}
